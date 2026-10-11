@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LiveShows</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0f0d0b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f0d0b'/%3E%3Cpath d='M18 46V18h6v22h14v6z' fill='%23ff5a36'/%3E%3Ccircle cx='45' cy='22' r='5' fill='%23f2c14e'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0d0b; --panel:#1a1714; --panel2:#231f1b; --line:#332d27;
+  --ink:#f4efe8; --muted:#a59a8e; --dim:#6f665d;
+  --hot:#ff5a36; --gold:#f2c14e; --ok:#5fc48a; --warn:#f2c14e; --bad:#ff6b6b;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px calc(96px + env(safe-area-inset-bottom))}
+.hidden{display:none!important}
+
+/* header */
+header{position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg) 70%,transparent);padding:calc(14px + env(safe-area-inset-top)) 0 10px}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.logo{font-family:Anton,Impact,sans-serif;font-size:34px;letter-spacing:.5px;line-height:1;text-transform:uppercase}
+.logo span{color:var(--hot)}
+.who{color:var(--muted);font-size:13px}
+
+/* bottom tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:rgba(15,13,11,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+nav.tabs .in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+nav.tabs button{background:none;border:0;padding:8px 2px;border-radius:10px;color:var(--muted);font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button.on{color:var(--ink);background:var(--panel)}
+nav.tabs .badge{position:absolute;top:3px;right:calc(50% - 22px);background:var(--hot);color:#fff;font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+
+/* common */
+h2.sec{font-family:Anton,Impact,sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.5px;font-size:22px;margin:18px 0 10px}
+.row{display:flex;gap:8px;align-items:center}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn.hot{background:var(--hot);color:#fff}
+.btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:7px 11px;font-size:14px;border-radius:9px}
+.btn:disabled{opacity:.5;cursor:default}
+input[type=text],input[type=email],input[type=password],input[type=tel],input[type=url]{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 13px;outline:none}
+input:focus{border-color:var(--muted)}
+label.f{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.muted{color:var(--muted)} .dim{color:var(--dim)} .small{font-size:13px}
+.err{color:var(--bad);font-size:14px;margin-top:8px;min-height:1em}
+.okmsg{color:var(--ok);font-size:14px;margin-top:8px}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px}
+.seg button{background:none;border:0;padding:7px 12px;border-radius:8px;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer}
+.seg button.on{background:var(--panel2);color:var(--ink)}
+.empty{text-align:center;padding:42px 16px;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
+.note{background:rgba(242,193,78,.08);border:1px solid rgba(242,193,78,.25);color:#efd9a3;border-radius:12px;padding:10px 12px;font-size:14px;margin:10px 0}
+
+/* login */
+.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.auth .box{width:100%;max-width:380px}
+.auth .logo{font-size:56px;margin-bottom:6px}
+.auth p.tag{color:var(--muted);margin:0 0 22px}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;padding:0;font-size:14px}
+
+/* show cards */
+.list{display:flex;flex-direction:column;gap:10px}
+.show{display:grid;grid-template-columns:64px 1fr;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px;overflow:hidden}
+.date{background:var(--panel2);border-radius:10px;text-align:center;padding:7px 0 8px;align-self:start}
+.date .m{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--hot);text-transform:uppercase}
+.date .d{font-family:Anton,Impact,sans-serif;font-size:28px;line-height:1.05}
+.date .w{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.show .artist{font-weight:700;font-size:17px;line-height:1.25;word-break:break-word}
+.show .meta{color:var(--muted);font-size:14px;margin-top:2px}
+.show .foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);background:var(--panel2);border-radius:999px;padding:3px 9px}
+.src i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.src.instagram i{background:#e1306c}.src.ticketmaster i{background:#3b8cff}.src.venue i{background:var(--gold)}.src.x i{background:#ddd}.src.web i{background:#8bd}
+.soon{font-size:12px;font-weight:700;color:var(--bg);background:var(--gold);border-radius:999px;padding:2px 8px}
+.thumb{grid-column:1/-1;margin:-12px -12px 0;height:120px;background-size:cover;background-position:center;border-bottom:1px solid var(--line)}
+
+/* giveaways */
+.gw{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;position:relative}
+.gw.entered{opacity:.62}
+.gw .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.gw .artist{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--hot)}
+.gw .prize{font-weight:700;font-size:17px;margin-top:2px;line-height:1.3}
+.gw .how{margin-top:8px;font-size:15px;color:#ddd3c7}
+.gw .dl{margin-top:8px;font-size:13px;font-weight:600}
+.dl.urgent{color:var(--bad)} .dl.later{color:var(--gold)} .dl.none{color:var(--dim);font-weight:500}
+.gw .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tagnew{font-size:11px;font-weight:700;background:var(--hot);color:#fff;border-radius:6px;padding:2px 6px}
+
+/* sources */
+.addbox .seg{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}
+.addbox .row{margin-top:10px}
+.srcrow{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.srcrow:last-child{border-bottom:0}
+.srcrow .nm{font-weight:600;word-break:break-all}
+.srcrow .st{font-size:12px;margin-top:2px}
+.st.ok{color:var(--ok)} .st.wait{color:var(--muted)} .st.bad{color:var(--bad)}
+.srcrow .grow{flex:1;min-width:0}
+.srcrow.paused .nm{color:var(--dim);text-decoration:line-through}
+.iconbtn{background:var(--panel2);border:1px solid var(--line);border-radius:9px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.iconbtn svg{width:18px;height:18px}
+
+/* settings */
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.switch:last-child{border-bottom:0}
+.tog{position:relative;width:48px;height:28px;flex:none}
+.tog input{opacity:0;width:0;height:0}
+.tog span{position:absolute;inset:0;background:var(--panel2);border:1px solid var(--line);border-radius:999px;transition:.15s;cursor:pointer}
+.tog span:before{content:"";position:absolute;width:22px;height:22px;left:2px;top:2px;background:var(--muted);border-radius:50%;transition:.15s}
+.tog input:checked+span{background:var(--hot);border-color:var(--hot)}
+.tog input:checked+span:before{transform:translateX(20px);background:#fff}
+.mem{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+.mem:last-child{border-bottom:0}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;z-index:9;max-width:calc(100% - 32px);text-align:center}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:s .8s linear infinite;vertical-align:-3px}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (min-width:640px){.thumb{height:150px}}
+</style>
+</head>
+<body>
+
+<!-- sign in -->
+<div id="auth" class="auth hidden">
+  <div class="box">
+    <div class="logo">Live<span>Shows</span></div>
+    <p class="tag">Arizona shows and every ticket giveaway from the artists you follow.</p>
+    <form id="loginForm">
+      <label class="f" for="le">Email</label>
+      <input id="le" type="email" autocomplete="username" required>
+      <label class="f" for="lp">Password</label>
+      <input id="lp" type="password" autocomplete="current-password" required>
+      <div class="err" id="lerr"></div>
+      <button class="btn hot" style="width:100%;margin-top:6px" type="submit">Sign in</button>
+    </form>
+    <p style="margin-top:16px"><button class="link" id="forgotBtn" type="button">Forgot password?</button></p>
+    <div class="okmsg hidden" id="forgotMsg">If that email has an account, a sign-in code is on its way. It works for one hour.</div>
+  </div>
+</div>
+
+<!-- set password -->
+<div id="setpw" class="auth hidden">
+  <div class="box">
+    <div class="logo">Live<span>Shows</span></div>
+    <p class="tag">Pick your own password. You'll stay signed in on this device for 90 days.</p>
+    <form id="pwForm">
+      <label class="f" for="np">New password (8 or more characters)</label>
+      <input id="np" type="password" autocomplete="new-password" minlength="8" required>
+      <label class="f" for="np2">Type it again</label>
+      <input id="np2" type="password" autocomplete="new-password" minlength="8" required>
+      <div class="err" id="perr"></div>
+      <button class="btn hot" style="width:100%;margin-top:6px" type="submit">Save and continue</button>
+    </form>
+  </div>
+</div>
+
+<!-- app -->
+<div id="app" class="hidden">
+  <div class="wrap">
+    <header>
+      <div class="brand"><div class="logo">Live<span>Shows</span></div><div class="who" id="who"></div></div>
+    </header>
+
+    <section id="v-shows">
+      <div class="row" style="justify-content:space-between;margin:4px 0 12px">
+        <div class="seg" id="sortSeg"><button data-s="announced" class="on">Newest</button><button data-s="date">By show date</button></div>
+        <span class="small muted" id="showCount"></span>
+      </div>
+      <div class="list" id="showList"></div>
+    </section>
+
+    <section id="v-giveaways" class="hidden">
+      <h2 class="sec">Chances to win</h2>
+      <p class="small muted" style="margin-top:-4px">From artists' posts, venues, Arizona radio, and X. Tap "I entered" so you can track what you've done.</p>
+      <div class="list" id="gwList"></div>
+    </section>
+
+    <section id="v-sources" class="hidden">
+      <h2 class="sec">Follow</h2>
+      <div class="card addbox">
+        <div class="seg" id="typeSeg">
+          <button data-t="instagram" class="on">Instagram</button><button data-t="ticketmaster">Artist</button><button data-t="venue">Venue site</button>
+        </div>
+        <form id="addForm" class="row">
+          <input id="addVal" type="text" autocomplete="off" autocapitalize="none" spellcheck="false">
+          <button class="btn hot" type="submit">Follow</button>
+        </form>
+        <div class="small muted" id="addHelp" style="margin-top:8px"></div>
+        <div class="err" id="aerr"></div>
+      </div>
+      <div id="keyNotes"></div>
+      <h2 class="sec">Watching</h2>
+      <div class="card" id="srcList" style="padding:2px 14px"></div>
+    </section>
+
+    <section id="v-settings" class="hidden">
+      <h2 class="sec">Alerts</h2>
+      <div class="card" style="padding:2px 14px">
+        <div class="switch"><div><div style="font-weight:600">Daily email</div><div class="small muted">7:00 am, new shows plus giveaways. Skipped when nothing is new.</div></div>
+          <label class="tog"><input type="checkbox" id="sDigest"><span></span></label></div>
+        <div class="switch"><div><div style="font-weight:600">Text me every giveaway</div><div class="small muted">Sent the moment one is found.</div></div>
+          <label class="tog"><input type="checkbox" id="sSms"><span></span></label></div>
+        <div style="padding:4px 0 14px">
+          <label class="f" for="sPhone">Mobile number</label>
+          <div class="row"><input id="sPhone" type="tel" placeholder="(602) 555-0123" autocomplete="tel"><button class="btn ghost" id="savePhone" type="button">Save</button></div>
+          <div class="err" id="serr"></div>
+        </div>
+      </div>
+
+      <h2 class="sec">Invite someone</h2>
+      <div class="card">
+        <form id="invForm">
+          <label class="f" for="iName" style="margin-top:0">Name</label>
+          <input id="iName" type="text" required>
+          <label class="f" for="iEmail">Email</label>
+          <input id="iEmail" type="email" required>
+          <div class="err" id="ierr"></div>
+          <button class="btn hot" type="submit" style="margin-top:6px">Send invite</button>
+        </form>
+        <p class="small muted" style="margin-bottom:0">They get a temporary password by email. Sending again to the same email resets it.</p>
+      </div>
+
+      <h2 class="sec">Members</h2>
+      <div class="card" id="memList" style="padding:4px 14px"></div>
+
+      <h2 class="sec">Account</h2>
+      <div class="card">
+        <form id="cpForm">
+          <label class="f" for="cpOld" style="margin-top:0">Current password</label>
+          <input id="cpOld" type="password" autocomplete="current-password" required>
+          <label class="f" for="cpNew">New password</label>
+          <input id="cpNew" type="password" autocomplete="new-password" minlength="8" required>
+          <div class="err" id="cperr"></div>
+          <button class="btn ghost" type="submit" style="margin-top:6px">Change password</button>
+        </form>
+        <p style="margin:18px 0 0"><button class="btn ghost" id="signOut" type="button">Sign out</button></p>
+      </div>
+    </section>
+  </div>
+
+  <nav class="tabs"><div class="in">
+    <button data-v="shows" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Shows</button>
+    <button data-v="giveaways"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>Giveaways<span class="badge hidden" id="gwBadge"></span></button>
+    <button data-v="sources"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Follow</button>
+    <button data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Me</button>
+  </div></nav>
+</div>
+
+<script>
+const API = "https://pgldzfhatnpgucybobva.supabase.co/functions/v1/ls-api";
+const $ = (s) => document.querySelector(s);
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch {} },
+  del(k){ try { localStorage.removeItem(k); } catch {} },
+};
+let TOKEN = store.get("ls_token");
+let ME = null, SORT = store.get("ls_sort") || "announced", ADDTYPE = "instagram", STATUS = null;
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+async function api(action, body = {}) {
+  const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", ...(TOKEN ? { Authorization: "Bearer " + TOKEN } : {}) }, body: JSON.stringify({ action, ...body }) });
+  let b = {}; try { b = await r.json(); } catch {}
+  if (r.status === 401 && b.error === "signed_out") { signOut(); throw new Error("Please sign in again."); }
+  if (r.status === 403 && b.error === "must_change") { show("setpw"); throw new Error("Pick a new password first."); }
+  if (!r.ok) throw new Error(b.error || "Something went wrong.");
+  return b;
+}
+function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
+function show(id) { for (const x of ["auth","setpw","app"]) $("#" + x).classList.toggle("hidden", x !== id); }
+function signOut() { TOKEN = null; ME = null; store.del("ls_token"); show("auth"); }
+
+// ---------- auth ----------
+$("#loginForm").onsubmit = async (e) => {
+  e.preventDefault(); $("#lerr").textContent = "";
+  const btn = e.submitter; btn.disabled = true;
+  try {
+    const b = await api("login", { email: $("#le").value, password: $("#lp").value });
+    TOKEN = b.token; store.set("ls_token", TOKEN); ME = b.user;
+    $("#lp").value = "";
+    if (ME.must_change) show("setpw"); else boot();
+  } catch (err) { $("#lerr").textContent = err.message; }
+  btn.disabled = false;
+};
+$("#forgotBtn").onclick = async () => {
+  const email = $("#le").value.trim();
+  if (!email) { $("#lerr").textContent = "Type your email above first."; return; }
+  $("#lerr").textContent = "";
+  try { await api("forgot", { email }); $("#forgotMsg").classList.remove("hidden"); } catch (err) { $("#lerr").textContent = err.message; }
+};
+$("#pwForm").onsubmit = async (e) => {
+  e.preventDefault(); $("#perr").textContent = "";
+  if ($("#np").value !== $("#np2").value) { $("#perr").textContent = "Those don't match."; return; }
+  try {
+    const b = await api("change_password", { new_password: $("#np").value });
+    TOKEN = b.token; store.set("ls_token", TOKEN); ME = b.user;
+    $("#np").value = $("#np2").value = "";
+    boot();
+  } catch (err) { $("#perr").textContent = err.message; }
+};
+$("#cpForm").onsubmit = async (e) => {
+  e.preventDefault(); $("#cperr").textContent = "";
+  try {
+    const b = await api("change_password", { current_password: $("#cpOld").value, new_password: $("#cpNew").value });
+    TOKEN = b.token; store.set("ls_token", TOKEN);
+    $("#cpOld").value = $("#cpNew").value = ""; toast("Password changed");
+  } catch (err) { $("#cperr").textContent = err.message; }
+};
+$("#signOut").onclick = signOut;
+
+// ---------- tabs ----------
+let VIEW = "shows";
+document.querySelectorAll("nav.tabs button").forEach((b) => b.onclick = () => go(b.dataset.v));
+function go(v) {
+  VIEW = v;
+  document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+  for (const s of ["shows","giveaways","sources","settings"]) $("#v-" + s).classList.toggle("hidden", s !== v);
+  window.scrollTo(0, 0);
+  if (v === "shows") loadShows();
+  if (v === "giveaways") loadGiveaways();
+  if (v === "sources") loadSources();
+  if (v === "settings") loadSettings();
+  if (location.hash.slice(1) !== v) history.replaceState(null, "", "#" + v);
+}
+
+// ---------- shows ----------
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function phxToday() { return new Date(Date.now() - 7 * 3600e3).toISOString().slice(0, 10); }
+function daysUntil(d) { return Math.round((Date.parse(d + "T00:00:00Z") - Date.parse(phxToday() + "T00:00:00Z")) / 864e5); }
+function fmtTime(t) { if (!t || !/^\d{1,2}:\d{2}/.test(t)) return t || ""; let [h, m] = t.split(":").map(Number); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return `${h}${m ? ":" + String(m).padStart(2, "0") : ""}${ap}`; }
+const SRC = { instagram: "Instagram", ticketmaster: "Ticketmaster", venue: "Venue", x: "X", web: "Web" };
+
+document.querySelectorAll("#sortSeg button").forEach((b) => {
+  b.classList.toggle("on", b.dataset.s === SORT);
+  b.onclick = () => { SORT = b.dataset.s; store.set("ls_sort", SORT); document.querySelectorAll("#sortSeg button").forEach((x) => x.classList.toggle("on", x === b)); loadShows(); };
+});
+async function loadShows() {
+  const el = $("#showList");
+  if (!el.children.length) el.innerHTML = `<div class="empty"><span class="spin"></span></div>`;
+  try {
+    const { shows } = await api("feed", { sort: SORT });
+    $("#showCount").textContent = shows.length ? `${shows.length} upcoming` : "";
+    if (!shows.length) {
+      el.innerHTML = `<div class="empty"><b>Nothing upcoming yet</b>Follow an artist's Instagram, an artist name, or a venue's events page and shows will land here.<br><br><button class="btn hot" onclick="go('sources')">Follow something</button></div>`;
+      return;
+    }
+    el.innerHTML = shows.map((s) => {
+      const d = new Date(s.show_date + "T12:00:00Z"), n = daysUntil(s.show_date);
+      const when = n === 0 ? "Tonight" : n === 1 ? "Tomorrow" : n <= 7 ? `In ${n} days` : "";
+      const link = s.ticket_url || s.source_url;
+      return `<article class="show">
+        ${s.image_url && s.origin !== "instagram" ? `<div class="thumb" style="background-image:url('${esc(s.image_url)}')"></div>` : ""}
+        <div class="date"><div class="m">${MON[d.getUTCMonth()]}</div><div class="d">${d.getUTCDate()}</div><div class="w">${DOW[d.getUTCDay()]}</div></div>
+        <div>
+          <div class="artist">${esc(s.artist || "Live show")}</div>
+          <div class="meta">${esc([s.venue, s.city].filter(Boolean).join(", "))}${s.show_time ? " · " + esc(fmtTime(s.show_time)) : ""}</div>
+          <div class="foot">
+            ${when ? `<span class="soon">${when}</span>` : ""}
+            <span class="src ${s.origin}"><i></i>${SRC[s.origin] || s.origin}${s.ls_targets?.label && s.origin !== "ticketmaster" ? " · " + esc(s.ls_targets.label) : ""}</span>
+            ${s.ticket_url ? `<a class="btn sm" href="${esc(s.ticket_url)}" target="_blank" rel="noopener">Tickets</a>` : ""}
+            ${s.source_url && s.source_url !== s.ticket_url ? `<a class="btn sm ghost" href="${esc(s.source_url)}" target="_blank" rel="noopener">Original post</a>` : ""}
+            ${!link ? "" : ""}
+          </div>
+        </div></article>`;
+    }).join("");
+  } catch (err) { el.innerHTML = `<div class="empty"><b>Couldn't load shows</b>${esc(err.message)}</div>`; }
+}
+
+// ---------- giveaways ----------
+function deadline(g) {
+  if (g.deadline_at) {
+    const ms = Date.parse(g.deadline_at) - Date.now(), h = ms / 3600e3;
+    const local = new Date(g.deadline_at).toLocaleString("en-US", { timeZone: "America/Phoenix", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    if (h < 24) return `<div class="dl urgent">Ends in ${h < 1 ? Math.max(1, Math.round(h * 60)) + " min" : Math.round(h) + " hours"} · ${esc(local)}</div>`;
+    return `<div class="dl later">Ends ${esc(local)}</div>`;
+  }
+  if (g.deadline_text) return `<div class="dl later">Ends ${esc(g.deadline_text)}</div>`;
+  return `<div class="dl none">No deadline posted. Enter soon.</div>`;
+}
+async function loadGiveaways() {
+  const el = $("#gwList");
+  if (!el.children.length) el.innerHTML = `<div class="empty"><span class="spin"></span></div>`;
+  try {
+    const { giveaways } = await api("giveaways");
+    updateBadge(giveaways);
+    if (!giveaways.length) { el.innerHTML = `<div class="empty"><b>No open giveaways right now</b>They show up here, in your texts, and in the morning email as soon as one is found.</div>`; return; }
+    const open = giveaways.filter((g) => g.my_status !== "entered"), entered = giveaways.filter((g) => g.my_status === "entered");
+    open.sort((a, b) => (a.deadline_at ? Date.parse(a.deadline_at) : 9e15) - (b.deadline_at ? Date.parse(b.deadline_at) : 9e15));
+    el.innerHTML = [...open, ...entered].map((g) => {
+      const fresh = Date.now() - Date.parse(g.created_at) < 24 * 3600e3 && g.my_status !== "entered";
+      return `<article class="gw ${g.my_status === "entered" ? "entered" : ""}" data-id="${g.id}">
+        <div class="top"><div class="artist">${esc(g.artist || g.ls_targets?.label || "Giveaway")}</div>${fresh ? `<span class="tagnew">NEW</span>` : ""}</div>
+        <div class="prize">${esc(g.prize || g.title)}</div>
+        ${g.how_to_enter ? `<div class="how">${esc(g.how_to_enter)}</div>` : ""}
+        ${deadline(g)}
+        <div class="small dim" style="margin-top:6px"><span class="src ${g.origin}"><i></i>${SRC[g.origin] || g.origin}${g.poster ? " · " + esc(g.poster) : ""}</span>${g.show_date ? ` &nbsp;Show ${esc(g.show_date.slice(5).replace("-", "/"))}${g.venue ? " at " + esc(g.venue) : ""}` : ""}</div>
+        <div class="acts">
+          ${g.url ? `<a class="btn sm hot" href="${esc(g.url)}" target="_blank" rel="noopener">Enter</a>` : ""}
+          ${g.my_status === "entered" ? `<button class="btn sm ghost" data-st="">Undo entered</button>` : `<button class="btn sm ghost" data-st="entered">I entered</button>`}
+          <button class="btn sm ghost" data-st="dismissed">Hide</button>
+        </div></article>`;
+    }).join("");
+    el.querySelectorAll("[data-st]").forEach((b) => b.onclick = async () => {
+      const id = b.closest(".gw").dataset.id;
+      try { await api("giveaway_status", { id, status: b.dataset.st || null }); loadGiveaways(); } catch (err) { toast(err.message); }
+    });
+  } catch (err) { el.innerHTML = `<div class="empty"><b>Couldn't load giveaways</b>${esc(err.message)}</div>`; }
+}
+function updateBadge(list) {
+  const n = list.filter((g) => !g.my_status).length;
+  const b = $("#gwBadge"); b.textContent = n > 9 ? "9+" : n; b.classList.toggle("hidden", !n);
+}
+
+// ---------- sources ----------
+const HELP = {
+  instagram: ["@artisthandle", "Paste the handle or profile link. Posts are checked every few hours for Arizona dates and giveaways."],
+  ticketmaster: ["Artist or band name", "Searches Ticketmaster for this artist's Arizona dates every 6 hours."],
+  venue: ["https://venue.com/events", "Paste a bar or venue events page. It's read every 6 hours."],
+};
+document.querySelectorAll("#typeSeg button").forEach((b) => b.onclick = () => {
+  ADDTYPE = b.dataset.t;
+  document.querySelectorAll("#typeSeg button").forEach((x) => x.classList.toggle("on", x === b));
+  setHelp();
+});
+function setHelp() { $("#addVal").placeholder = HELP[ADDTYPE][0]; $("#addHelp").textContent = HELP[ADDTYPE][1]; $("#addVal").type = ADDTYPE === "venue" ? "url" : "text"; }
+$("#addForm").onsubmit = async (e) => {
+  e.preventDefault(); $("#aerr").textContent = "";
+  const v = $("#addVal").value.trim(); if (!v) return;
+  const btn = e.submitter; btn.disabled = true;
+  try { const b = await api("add_source", { type: ADDTYPE, value: v }); $("#addVal").value = ""; toast(b.new ? "Following. First check is running now." : "Following"); loadSources(); }
+  catch (err) { $("#aerr").textContent = err.message; }
+  btn.disabled = false;
+};
+function ago(t) { if (!t) return ""; const m = (Date.now() - Date.parse(t)) / 6e4; if (m < 60) return Math.max(1, Math.round(m)) + " min ago"; if (m < 1440) return Math.round(m / 60) + " hr ago"; return Math.round(m / 1440) + " days ago"; }
+async function loadSources() {
+  const el = $("#srcList");
+  if (!el.children.length) el.innerHTML = `<div class="empty"><span class="spin"></span></div>`;
+  try {
+    const [{ sources }, st] = await Promise.all([api("sources"), STATUS ? Promise.resolve(STATUS) : api("status")]);
+    STATUS = st;
+    const notes = [];
+    if (!st.instagram && sources.some((s) => s.type === "instagram")) notes.push("Instagram reading is being switched on. Handles you add now are saved and start updating as soon as it's live.");
+    if (!st.ticketmaster && sources.some((s) => s.type === "ticketmaster")) notes.push("Ticketmaster search is being switched on. Artists you add now are saved and start updating as soon as it's live.");
+    $("#keyNotes").innerHTML = notes.map((n) => `<div class="note">${esc(n)}</div>`).join("");
+    if (!sources.length) { el.innerHTML = `<div class="empty" style="padding:22px 6px">Nothing yet. Start with a favorite artist's Instagram.</div>`; return; }
+    el.innerHTML = sources.map((s) => {
+      let stat = `<span class="st wait">Checking for the first time</span>`;
+      if (s.last_error && (!s.last_ok_at || Date.parse(s.last_error_at) > Date.parse(s.last_ok_at))) stat = `<span class="st ${/Waiting on/.test(s.last_error) ? "wait" : "bad"}">${/Waiting on/.test(s.last_error) ? "Switching on soon" : "Couldn't read last time. Jon has been told."}</span>`;
+      else if (s.last_ok_at) stat = `<span class="st ok">Checked ${ago(s.last_ok_at)}</span>`;
+      return `<div class="srcrow ${s.active ? "" : "paused"}" data-id="${s.id}">
+        <span class="src ${s.type}" style="flex:none"><i></i>${s.type === "ticketmaster" ? "Artist" : SRC[s.type]}</span>
+        <div class="grow"><div class="nm">${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener" style="text-decoration:none">${esc(s.label)}</a>` : esc(s.label)}</div><div class="st">${s.active ? stat : `<span class="st wait">Paused</span>`}</div></div>
+        <button class="iconbtn" data-a="toggle" title="${s.active ? "Pause" : "Resume"}" aria-label="${s.active ? "Pause" : "Resume"}">${s.active ? `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>` : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>`}</button>
+        <button class="iconbtn" data-a="remove" title="Remove" aria-label="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>`;
+    }).join("");
+    el.querySelectorAll("[data-a]").forEach((b) => b.onclick = async () => {
+      const row = b.closest(".srcrow"), id = row.dataset.id;
+      try {
+        if (b.dataset.a === "toggle") await api("source_toggle", { target_id: id, active: row.classList.contains("paused") });
+        else { if (!confirm("Stop following this?")) return; await api("source_remove", { target_id: id }); }
+        loadSources();
+      } catch (err) { toast(err.message); }
+    });
+  } catch (err) { el.innerHTML = `<div class="empty">${esc(err.message)}</div>`; }
+}
+
+// ---------- settings ----------
+function fmtPhone(p) { const d = (p || "").replace(/\D/g, "").slice(-10); return d.length === 10 ? `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}` : p || ""; }
+async function saveSettings(patch) {
+  $("#serr").textContent = "";
+  try { const { user } = await api("settings", patch); ME = user; paintSettings(); toast("Saved"); }
+  catch (err) { $("#serr").textContent = err.message; paintSettings(); }
+}
+function paintSettings() {
+  $("#sDigest").checked = !!ME.digest; $("#sSms").checked = !!ME.sms_giveaways;
+  if (document.activeElement !== $("#sPhone")) $("#sPhone").value = fmtPhone(ME.phone);
+}
+$("#sDigest").onchange = (e) => saveSettings({ digest: e.target.checked });
+$("#sSms").onchange = (e) => saveSettings({ sms_giveaways: e.target.checked, ...(e.target.checked && $("#sPhone").value.trim() && !ME.phone ? { phone: $("#sPhone").value } : {}) });
+$("#savePhone").onclick = () => saveSettings({ phone: $("#sPhone").value.trim() });
+$("#invForm").onsubmit = async (e) => {
+  e.preventDefault(); $("#ierr").textContent = "";
+  const btn = e.submitter; btn.disabled = true;
+  try { const b = await api("invite", { name: $("#iName").value, email: $("#iEmail").value }); toast(b.resent ? "New temporary password sent" : "Invite sent"); $("#iName").value = $("#iEmail").value = ""; loadSettings(); }
+  catch (err) { $("#ierr").textContent = err.message; }
+  btn.disabled = false;
+};
+async function loadSettings() {
+  paintSettings();
+  try {
+    const { members } = await api("members");
+    $("#memList").innerHTML = members.map((m) => `<div class="mem"><span>${esc(m.name)}</span><span class="small ${m.joined ? "muted" : "dim"}">${m.joined ? "Joined" : "Invited"}</span></div>`).join("");
+  } catch {}
+}
+
+// ---------- boot ----------
+async function boot() {
+  show("app");
+  $("#who").textContent = ME?.name || "";
+  setHelp();
+  const v = location.hash.slice(1);
+  go(["shows","giveaways","sources","settings"].includes(v) ? v : "shows");
+  api("giveaways").then((b) => updateBadge(b.giveaways)).catch(() => {});
+}
+(async () => {
+  if (!TOKEN) return show("auth");
+  try { const { user } = await api("me"); ME = user; if (ME.must_change) show("setpw"); else boot(); }
+  catch { if (TOKEN) show("auth"); }
+})();
+document.addEventListener("visibilitychange", () => { if (!document.hidden && ME && !ME.must_change) { if (VIEW === "shows") loadShows(); if (VIEW === "giveaways") loadGiveaways(); } });
+</script>
+</body>
+</html>
