@@ -84,7 +84,7 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
 .src i{width:7px;height:7px;border-radius:50%;display:inline-block}
 .src.instagram i{background:#e1306c}.src.ticketmaster i{background:#3b8cff}.src.venue i{background:var(--gold)}.src.x i{background:#ddd}.src.web i{background:#8bd}
 .soon{font-size:12px;font-weight:700;color:var(--bg);background:var(--gold);border-radius:999px;padding:2px 8px}
-.thumb{grid-column:1/-1;margin:-12px -12px 0;height:120px;background-size:cover;background-position:center;border-bottom:1px solid var(--line)}
+.thumb{grid-column:1/-1;margin:-12px -12px 0;width:calc(100% + 24px);height:120px;object-fit:cover;display:block;border-bottom:1px solid var(--line);background:var(--panel2)}
 
 /* giveaways */
 .gw{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;position:relative}
@@ -125,7 +125,7 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;z-index:9;max-width:calc(100% - 32px);text-align:center}
 .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:s .8s linear infinite;vertical-align:-3px}
 @keyframes s{to{transform:rotate(360deg)}}
-@media (min-width:640px){.thumb{height:150px}}
+@media (min-width:640px){.thumb{height:160px}}
 </style>
 </head>
 <body>
@@ -357,19 +357,17 @@ async function loadShows() {
     el.innerHTML = shows.map((s) => {
       const d = new Date(s.show_date + "T12:00:00Z"), n = daysUntil(s.show_date);
       const when = n === 0 ? "Tonight" : n === 1 ? "Tomorrow" : n <= 7 ? `In ${n} days` : "";
-      const link = s.ticket_url || s.source_url;
       return `<article class="show">
-        ${s.image_url && s.origin !== "instagram" ? `<div class="thumb" style="background-image:url('${esc(s.image_url)}')"></div>` : ""}
+        ${s.image_url && s.origin !== "instagram" ? `<img class="thumb" src="${esc(s.image_url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}
         <div class="date"><div class="m">${MON[d.getUTCMonth()]}</div><div class="d">${d.getUTCDate()}</div><div class="w">${DOW[d.getUTCDay()]}</div></div>
         <div>
           <div class="artist">${esc(s.artist || "Live show")}</div>
           <div class="meta">${esc([s.venue, s.city].filter(Boolean).join(", "))}${s.show_time ? " · " + esc(fmtTime(s.show_time)) : ""}</div>
           <div class="foot">
             ${when ? `<span class="soon">${when}</span>` : ""}
-            <span class="src ${s.origin}"><i></i>${SRC[s.origin] || s.origin}${s.ls_targets?.label && s.origin !== "ticketmaster" ? " · " + esc(s.ls_targets.label) : ""}</span>
+            <span class="src ${s.origin}"><i></i>${SRC[s.origin] || s.origin}${s.origin === "instagram" && s.ls_targets?.label ? " · " + esc(s.ls_targets.label) : ""}</span>
             ${s.ticket_url ? `<a class="btn sm" href="${esc(s.ticket_url)}" target="_blank" rel="noopener">Tickets</a>` : ""}
-            ${s.source_url && s.source_url !== s.ticket_url ? `<a class="btn sm ghost" href="${esc(s.source_url)}" target="_blank" rel="noopener">Original post</a>` : ""}
-            ${!link ? "" : ""}
+            ${s.source_url && s.source_url !== s.ticket_url ? `<a class="btn sm ghost" href="${esc(s.source_url)}" target="_blank" rel="noopener">${s.origin === "venue" ? "Venue page" : "Original post"}</a>` : ""}
           </div>
         </div></article>`;
     }).join("");
