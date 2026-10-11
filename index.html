@@ -82,7 +82,7 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
 .show .foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
 .src{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);background:var(--panel2);border-radius:999px;padding:3px 9px}
 .src i{width:7px;height:7px;border-radius:50%;display:inline-block}
-.src.instagram i{background:#e1306c}.src.ticketmaster i{background:#3b8cff}.src.venue i{background:var(--gold)}.src.x i{background:#ddd}.src.web i{background:#8bd}.src.jambase i{background:#9b7bff}.src.bandsintown i{background:#00cec8}.src.sweeps i,.src.feed i{background:#5fc48a}
+.src.instagram i{background:#e1306c}.src.ticketmaster i{background:#3b8cff}.src.venue i{background:var(--gold)}.src.x i{background:#ddd}.src.web i{background:#8bd}.src.jambase i{background:#9b7bff}.src.bandsintown i{background:#00cec8}.src.sweeps i,.src.feed i{background:#5fc48a}.src.scene i{background:#ff5a36}
 .soon{font-size:12px;font-weight:700;color:var(--bg);background:var(--gold);border-radius:999px;padding:2px 8px}
 .thumb{grid-column:1/-1;margin:-12px -12px 0;width:calc(100% + 24px);height:120px;object-fit:cover;display:block;border-bottom:1px solid var(--line);background:var(--panel2)}
 
@@ -349,7 +349,7 @@ const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","
 function phxToday() { return new Date(Date.now() - 7 * 3600e3).toISOString().slice(0, 10); }
 function daysUntil(d) { return Math.round((Date.parse(d + "T00:00:00Z") - Date.parse(phxToday() + "T00:00:00Z")) / 864e5); }
 function fmtTime(t) { if (!t || !/^\d{1,2}:\d{2}/.test(t)) return t || ""; let [h, m] = t.split(":").map(Number); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return `${h}${m ? ":" + String(m).padStart(2, "0") : ""}${ap}`; }
-const SRC = { instagram: "Instagram", ticketmaster: "Ticketmaster", venue: "Venue", x: "X", web: "Web", jambase: "JamBase", bandsintown: "Bandsintown", sweeps: "Sweepstakes", feed: "Contests" };
+const SRC = { instagram: "Instagram", ticketmaster: "Ticketmaster", venue: "Venue", x: "X", web: "Web", jambase: "JamBase", bandsintown: "Bandsintown", sweeps: "Sweepstakes", feed: "Contests", scene: "Scene" };
 
 document.querySelectorAll("#sortSeg button").forEach((b) => {
   b.classList.toggle("on", b.dataset.s === SORT);
@@ -462,7 +462,8 @@ async function loadSources() {
     if (!st.ticketmaster && sources.some((s) => s.type === "ticketmaster")) notes.push("Ticketmaster search is being switched on. Artists you add now are saved and start updating as soon as it's live.");
     if (ME.is_admin && (!st.instagram || !st.ticketmaster || !st.jambase)) notes.push("Some connections aren't set up yet. Go to Me, Connections to paste your keys.");
     $("#keyNotes").innerHTML = notes.map((n) => `<div class="note">${esc(n)}</div>`).join("");
-    sources.sort((a, b) => (a.type === "feed") - (b.type === "feed"));
+    const ORD = { scene: 0, instagram: 1, ticketmaster: 1, venue: 2, feed: 3 };
+    sources.sort((a, b) => (ORD[a.type] ?? 1) - (ORD[b.type] ?? 1) || String(a.label).localeCompare(String(b.label)));
     if (!sources.length) { el.innerHTML = `<div class="empty" style="padding:22px 6px">Nothing yet. Start with a favorite artist's Instagram.</div>`; return; }
     el.innerHTML = sources.map((s) => {
       let stat = `<span class="st wait">Checking for the first time</span>`;
