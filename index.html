@@ -82,7 +82,7 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
 .show .foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
 .src{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);background:var(--panel2);border-radius:999px;padding:3px 9px}
 .src i{width:7px;height:7px;border-radius:50%;display:inline-block}
-.src.instagram i{background:#e1306c}.src.ticketmaster i{background:#3b8cff}.src.venue i{background:var(--gold)}.src.x i{background:#ddd}.src.web i{background:#8bd}
+.src.instagram i{background:#e1306c}.src.ticketmaster i{background:#3b8cff}.src.venue i{background:var(--gold)}.src.x i{background:#ddd}.src.web i{background:#8bd}.src.jambase i{background:#9b7bff}.src.bandsintown i{background:#00cec8}.src.sweeps i,.src.feed i{background:#5fc48a}
 .soon{font-size:12px;font-weight:700;color:var(--bg);background:var(--gold);border-radius:999px;padding:2px 8px}
 .thumb{grid-column:1/-1;margin:-12px -12px 0;width:calc(100% + 24px);height:120px;object-fit:cover;display:block;border-bottom:1px solid var(--line);background:var(--panel2)}
 
@@ -217,6 +217,17 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
         </div>
       </div>
 
+      <div id="connWrap" class="hidden">
+      <h2 class="sec">Connections</h2>
+      <div class="card" id="connCard">
+        <p class="small muted" style="margin-top:0">Paste each key once. It's tested, then stored in the private vault. You never need to paste it again.</p>
+        <div id="connRows"></div>
+        <div class="switch" style="border-top:1px solid var(--line);margin-top:6px"><div><div style="font-weight:600">Bandsintown sweep</div><div class="small muted">Weekly scan of every Phoenix show on Bandsintown through your Apify account. About $4.50 a week. Off unless you turn it on.</div></div>
+          <label class="tog"><input type="checkbox" id="sBit"><span></span></label></div>
+        <div class="err" id="cerr"></div>
+      </div>
+      </div>
+
       <h2 class="sec">Invite someone</h2>
       <div class="card">
         <form id="invForm">
@@ -338,7 +349,7 @@ const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","
 function phxToday() { return new Date(Date.now() - 7 * 3600e3).toISOString().slice(0, 10); }
 function daysUntil(d) { return Math.round((Date.parse(d + "T00:00:00Z") - Date.parse(phxToday() + "T00:00:00Z")) / 864e5); }
 function fmtTime(t) { if (!t || !/^\d{1,2}:\d{2}/.test(t)) return t || ""; let [h, m] = t.split(":").map(Number); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return `${h}${m ? ":" + String(m).padStart(2, "0") : ""}${ap}`; }
-const SRC = { instagram: "Instagram", ticketmaster: "Ticketmaster", venue: "Venue", x: "X", web: "Web" };
+const SRC = { instagram: "Instagram", ticketmaster: "Ticketmaster", venue: "Venue", x: "X", web: "Web", jambase: "JamBase", bandsintown: "Bandsintown", sweeps: "Sweepstakes", feed: "Contests" };
 
 document.querySelectorAll("#sortSeg button").forEach((b) => {
   b.classList.toggle("on", b.dataset.s === SORT);
@@ -422,7 +433,7 @@ function updateBadge(list) {
 // ---------- sources ----------
 const HELP = {
   instagram: ["@artisthandle", "Paste the handle or profile link. Posts are checked every few hours for Arizona dates and giveaways."],
-  ticketmaster: ["Artist or band name", "Searches Ticketmaster for this artist's Arizona dates every 6 hours."],
+  ticketmaster: ["Artist or band name", "Finds this artist's Arizona dates on Ticketmaster and JamBase (great for smaller bands), plus their giveaways on X."],
   venue: ["https://venue.com/events", "Paste a bar or venue events page. It's read every 6 hours."],
 };
 document.querySelectorAll("#typeSeg button").forEach((b) => b.onclick = () => {
@@ -449,7 +460,9 @@ async function loadSources() {
     const notes = [];
     if (!st.instagram && sources.some((s) => s.type === "instagram")) notes.push("Instagram reading is being switched on. Handles you add now are saved and start updating as soon as it's live.");
     if (!st.ticketmaster && sources.some((s) => s.type === "ticketmaster")) notes.push("Ticketmaster search is being switched on. Artists you add now are saved and start updating as soon as it's live.");
+    if (ME.is_admin && (!st.instagram || !st.ticketmaster || !st.jambase)) notes.push("Some connections aren't set up yet. Go to Me, Connections to paste your keys.");
     $("#keyNotes").innerHTML = notes.map((n) => `<div class="note">${esc(n)}</div>`).join("");
+    sources.sort((a, b) => (a.type === "feed") - (b.type === "feed"));
     if (!sources.length) { el.innerHTML = `<div class="empty" style="padding:22px 6px">Nothing yet. Start with a favorite artist's Instagram.</div>`; return; }
     el.innerHTML = sources.map((s) => {
       let stat = `<span class="st wait">Checking for the first time</span>`;
@@ -494,8 +507,35 @@ $("#invForm").onsubmit = async (e) => {
   catch (err) { $("#ierr").textContent = err.message; }
   btn.disabled = false;
 };
+const CONN = [
+  { k: "apify_api_token", label: "Apify (Instagram)", ph: "apify_api_...", help: "console.apify.com, Settings, API & Integrations, Personal API token" },
+  { k: "ticketmaster_api_key", label: "Ticketmaster", ph: "Consumer Key", help: "developer.ticketmaster.com, My Apps, your app, Consumer Key" },
+  { k: "jambase_api_key", label: "JamBase", ph: "jbd_...", help: "data.jambase.com, Account, API keys" },
+];
+async function loadConnections() {
+  try {
+    const c = await api("connections");
+    $("#connWrap").classList.toggle("hidden", !c.can_edit);
+    if (!c.can_edit) return;
+    $("#sBit").checked = !!c.bandsintown;
+    $("#connRows").innerHTML = CONN.map((x) => `<div style="padding:10px 0;border-bottom:1px solid var(--line)" data-k="${x.k}">
+      <div class="row" style="justify-content:space-between"><b>${x.label}</b><span class="small ${c.keys[x.k] ? "st ok" : "muted"}">${c.keys[x.k] ? "Connected" : "Not set"}</span></div>
+      <div class="small dim" style="margin:3px 0 7px">${esc(x.help)}</div>
+      <div class="row"><input type="password" autocomplete="off" placeholder="${c.keys[x.k] ? "Paste a new key to replace" : esc(x.ph)}"><button class="btn ghost sm" type="button">Save</button></div></div>`).join("")
+      + `<div class="small dim" style="padding-top:8px">JamBase calls this month: ${c.jambase_calls_this_month} of 900 (free limit is 1,000).</div>`;
+    $("#connRows").querySelectorAll("[data-k]").forEach((row) => row.querySelector("button").onclick = async () => {
+      const inp = row.querySelector("input"), btn = row.querySelector("button"); $("#cerr").textContent = "";
+      if (!inp.value.trim()) return;
+      btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+      try { const b = await api("set_key", { name: row.dataset.k, value: inp.value.trim() }); inp.value = ""; toast(b.label + " connected"); STATUS = null; loadConnections(); }
+      catch (err) { $("#cerr").textContent = err.message; btn.disabled = false; btn.textContent = "Save"; }
+    });
+  } catch {}
+}
+$("#sBit").onchange = async (e) => { try { await api("set_bandsintown", { on: e.target.checked }); toast(e.target.checked ? "Bandsintown sweep on" : "Bandsintown sweep off"); } catch (err) { $("#cerr").textContent = err.message; e.target.checked = !e.target.checked; } };
 async function loadSettings() {
   paintSettings();
+  loadConnections();
   try {
     const { members } = await api("members");
     $("#memList").innerHTML = members.map((m) => `<div class="mem"><span>${esc(m.name)}</span><span class="small ${m.joined ? "muted" : "dim"}">${m.joined ? "Joined" : "Invited"}</span></div>`).join("");
